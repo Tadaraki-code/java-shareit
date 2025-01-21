@@ -58,8 +58,8 @@ public class UserDaoImpl implements UserDao {
             throw new ValidationException("Id не может быть пустым или быть отрицательным числом");
         }
         Collection<Item> items = itemDao.getAllItems();
-        for (Item i : items){
-            if (i.getOwnerId().equals(id)){
+        for (Item i : items) {
+            if (i.getOwnerId().equals(id)) {
                 itemDao.deleteItem(i.getId());
             }
         }
