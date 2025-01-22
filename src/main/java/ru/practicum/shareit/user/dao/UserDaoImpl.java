@@ -44,7 +44,7 @@ public class UserDaoImpl implements UserDao {
     @Override
     public User createUser(User user) {
         log.info("Добавляем пользователя {}", user);
-        if (!checkEmails(user.getEmail())) {
+        if (!checkEmails(user.getEmail(), user.getId())) {
             throw new AlreadyExistException("Пользователь с email " + user.getEmail() + " уже существует");
         }
         user.setId(getNextId());
@@ -57,8 +57,7 @@ public class UserDaoImpl implements UserDao {
         if (id == null || id < 0) {
             throw new ValidationException("Id не может быть пустым или быть отрицательным числом");
         }
-        Collection<Item> items = itemDao.getAllItems();
-        for (Item i : items) {
+        for (Item i : itemDao.getAllItems()) {
             if (i.getOwnerId().equals(id)) {
                 itemDao.deleteItem(i.getId());
             }
@@ -70,28 +69,24 @@ public class UserDaoImpl implements UserDao {
     @Override
     public User updateUser(Map<String, String> update, Long id) {
         log.info("Обновляем пользователя с id {}", id);
-        if (users.get(id) == null) {
+        User oldUser = users.get(id);
+        if (oldUser == null) {
             throw new NotFoundException("Пользоватеь с таким id не найден, обновление невозможно.");
         }
-        User oldUser = users.get(id);
-        users.remove(id);
         if (update.get("name") != null) {
             if (!update.get("name").isBlank()) {
                 oldUser.setName(update.get("name"));
             } else {
-                users.put(oldUser.getId(), oldUser);
                 throw new ValidationException("В запросе на обновление имени была передана пустая строчка");
             }
         }
         if (update.get("email") != null) {
             if (update.get("email").isBlank()) {
-                users.put(oldUser.getId(), oldUser);
                 throw new ValidationException("В запросе на обновление имейла была передана пустая строчка");
             }
-            if (checkEmails(update.get("email"))) {
+            if (checkEmails(update.get("email"), id)) {
                 oldUser.setEmail(update.get("email"));
             } else {
-                users.put(oldUser.getId(), oldUser);
                 throw new AlreadyExistException("Пользователь с email " + update.get("email") + " уже существует");
             }
         }
@@ -108,9 +103,9 @@ public class UserDaoImpl implements UserDao {
         return ++currentMaxId;
     }
 
-    private Boolean checkEmails(String email) {
+    private Boolean checkEmails(String email, Long id) {
         for (User u : users.values()) {
-            if (u.getEmail().equals(email)) {
+            if (u.getEmail().equals(email) && !(u.getId().equals(id))) {
                 return false;
             }
         }

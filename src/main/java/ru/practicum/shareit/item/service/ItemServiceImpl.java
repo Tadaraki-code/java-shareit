@@ -22,11 +22,13 @@ public class ItemServiceImpl implements ItemService {
 
     @Override
     public ItemDto getItem(Long id) {
-        return itemDao.getItem(id);
+        log.info("Передаём запрос на получение вещи в itemDao.");
+        return ItemMapper.toItemDto(itemDao.getItem(id));
     }
 
     @Override
     public List<ItemDto> getAllOwnerItems(Long ownerId) {
+        log.info("Передаём запрос на список всех вещей пользоваля с id{} из itemDao.", ownerId);
         userDao.getUser(ownerId);
         return itemDao.getAllItems()
                 .stream()
@@ -36,24 +38,28 @@ public class ItemServiceImpl implements ItemService {
     }
 
     @Override
-    public ItemDto createItem(ItemDto item, Long ownerId) {
+    public ItemDto createItem(ItemDto itemDto, Long ownerId) {
+        log.info("Передаём запрос на создание новой вещи с id пользователя {} в itemDao.", ownerId);
         userDao.getUser(ownerId);
-        return itemDao.createItem(item, ownerId);
+        return ItemMapper.toItemDto(itemDao.createItem(ItemMapper.fromItemDto(itemDto, ownerId), ownerId));
     }
 
     @Override
     public void deleteItem(Long id) {
+        log.info("Передаём запрос на удаление вещи с id {} в itemDao.", id);
         itemDao.deleteItem(id);
     }
 
     @Override
     public ItemDto updateItem(Map<String, String> update, Long itemId, Long ownerId) {
+        log.info("Передаём запрос на обновление вещи с id {} в itemDao.", itemId);
         userDao.getUser(ownerId);
-        return itemDao.updateItem(update, itemId, ownerId);
+        return ItemMapper.toItemDto(itemDao.updateItem(update, itemId, ownerId));
     }
 
     @Override
     public List<ItemDto> searchItems(String searchText) {
+        log.info("Передаём запрос на поиск вещи с текстом {} в itemDao.", searchText);
         if (searchText == null || searchText.isBlank()) {
             return List.of();
         }
