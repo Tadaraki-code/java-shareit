@@ -115,12 +115,12 @@ public class ItemServiceImpl implements ItemService {
     @Override
     public CommentDto createComment(CommentDto comment, Long itemId, Long ownerId) {
         Item item = itemDao.findById(itemId)
-                .orElseThrow(() -> new NotFoundException("Вещи с id " + itemId + " не найдена" ));
+                .orElseThrow(() -> new NotFoundException("Вещи с id " + itemId + " не найдена"));
         User user = userDao.findById(ownerId)
-                .orElseThrow(() -> new NotFoundException("Пользователь с id " + ownerId + " не найден" ));
+                .orElseThrow(() -> new NotFoundException("Пользователь с id " + ownerId + " не найден"));
         Booking booking = bookingDao.findBookingByUserIdAndItemId(ownerId,itemId)
                 .orElseThrow(() -> new NotFoundException("Бронь не найден"));
-        if(booking.getStatus().equals(Status.APPROVED) && booking.getEnd().isBefore(LocalDateTime.now())) {
+        if (booking.getStatus().equals(Status.APPROVED) && booking.getEnd().isBefore(LocalDateTime.now())) {
             log.info("Передаём запрос на создание отзыва в commentDao.");
             return CommentMapper.toCommentDto(commentDao.save(CommentMapper.fromCommentDto(comment,item,user)));
         }
