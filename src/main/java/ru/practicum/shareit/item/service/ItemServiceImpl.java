@@ -16,13 +16,14 @@ import ru.practicum.shareit.item.dto.ItemDtoWhitBooking;
 import ru.practicum.shareit.item.dto.ItemDtoWhitComments;
 import ru.practicum.shareit.item.mapper.CommentMapper;
 import ru.practicum.shareit.item.mapper.ItemMapper;
+import ru.practicum.shareit.item.model.Comment;
 import ru.practicum.shareit.item.model.Item;
 import ru.practicum.shareit.user.dao.UserDao;
 import ru.practicum.shareit.user.model.User;
 
 import java.time.LocalDateTime;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -35,42 +36,80 @@ public class ItemServiceImpl implements ItemService {
 
     @Override
     public ItemDtoWhitComments getItem(Long id) {
-        log.info("Передаём запрос на получение вещи в itemDao.");
-        Item item = itemDao.findById(id).orElseThrow(() -> new NotFoundException("Вещь с id " + id + " не найдена."));
-        return ItemMapper.toItemDtoWhitComments(item,commentDao.findAllCommentsByItemId(item.getId()));
+        log.info("Передаём запрос на получение вещи с id {} в itemDao.", id);
+        Item item = findItemById(id);
+        return ItemMapper.toItemDtoWhitComments(item, commentDao.findAllCommentsByItemId(item.getId()));
     }
 
     @Override
     public List<ItemDtoWhitBooking> getAllOwnerItems(Long ownerId) {
         log.info("Передаём запрос на список всех вещей пользоваля с id{} из itemDao.", ownerId);
-        userDao.findById(ownerId).orElseThrow(() -> new NotFoundException("Пользователь не найден."));
-        return itemDao.findByOwnerId(ownerId).stream()
-                .map(i -> ItemMapper.toItemDtoWhitBooking(i,
-                        bookingDao.findLastBooking(i.getId(), LocalDateTime.now()),
-                        bookingDao.findNextBooking(i.getId(), LocalDateTime.now()),
-                        commentDao.findAllCommentsByItemId(i.getId())))
+        findUserById(ownerId);
+        Collection<Item> userItems = itemDao.findByOwnerId(ownerId);
+        List<Long> itemIds = userItems.stream().map(Item::getId).toList();
+        LocalDateTime now = LocalDateTime.now();
+
+        if (itemIds.isEmpty()) {
+            return Collections.emptyList();
+        }
+
+        Collection<Booking> ItemsBooking = bookingDao.findAllRelevantApprovedOwnerItemsBookingsById(itemIds, now);
+
+        Collection<Comment> ItemsComments = commentDao.findAllCommentsForAllItemsById(itemIds);
+
+        for (Comment c : ItemsComments) {
+            System.out.println(c);
+        }
+
+        Map<Long, List<Booking>> bookingMap = ItemsBooking.stream()
+                .filter(Objects::nonNull)
+                .collect(Collectors.groupingBy(b -> b.getItem().getId()));
+
+        Map<Long, List<Comment>> commentMap = ItemsComments.stream()
+                .filter(Objects::nonNull)
+                .collect(Collectors.groupingBy(c -> c.getItem().getId()));
+
+
+        return userItems.stream()
+                .map(item -> {
+                    List<Booking> bookings = bookingMap.getOrDefault(item.getId(), Collections.emptyList());
+                    Collection<Comment> comment = commentMap.getOrDefault(item.getId(), Collections.emptyList());
+                    Booking lastBooking = bookings.stream()
+                            .filter(booking -> booking.getEnd().isBefore(now))
+                            .max(Comparator.comparing(Booking::getEnd))
+                            .orElse(null);
+                    Booking nextBooking = bookings.stream()
+                            .filter(booking -> booking.getStart().isAfter(now))
+                            .min(Comparator.comparing(Booking::getStart))
+                            .orElse(null);
+                    return ItemMapper.toItemDtoWhitBooking(item, lastBooking, nextBooking, comment);
+                })
                 .toList();
     }
 
     @Override
     public ItemDto createItem(ItemDto itemDto, Long ownerId) {
         log.info("Передаём запрос на создание новой вещи с id пользователя {} в itemDao.", ownerId);
-        User user = userDao.findById(ownerId).orElseThrow(() -> new NotFoundException("Пользователь не найден."));
+        User user = findUserById(ownerId);
         return ItemMapper.toItemDto(itemDao.save(ItemMapper.fromItemDto(itemDto, user)));
     }
 
     @Override
-    public void deleteItem(Long id) {
-        log.info("Передаём запрос на удаление вещи с id {} в itemDao.", id);
-        itemDao.deleteById(id);
+    public void deleteItem(Long itemId, Long ownerId) {
+        log.info("Передаём запрос на удаление вещи с id {}  от пользлвателя с id {} в itemDao.", itemId, ownerId);
+        findUserById(ownerId);
+        Item item = findItemById(itemId);
+        if (!item.getOwner().getId().equals(ownerId)) {
+            throw new ValidationException("Только владелец вещи может удалить вещь");
+        }
+        itemDao.deleteById(itemId);
     }
 
     @Override
     public ItemDto updateItem(Map<String, String> update, Long itemId, Long ownerId) {
         log.info("Передаём запрос на обновление вещи с id {} в itemDao.", itemId);
-        userDao.findById(ownerId).orElseThrow(() -> new NotFoundException("Пользователь не найден."));
-        Item oldItem = itemDao.findById(itemId)
-                .orElseThrow(() -> new NotFoundException("Вещь с id " + itemId + " не найдена."));
+        findUserById(ownerId);
+        Item oldItem = findItemById(itemId);
 
         if (!oldItem.getOwner().getId().equals(ownerId)) {
             throw new ValidationException("Описание вещи может менять только владелец веши!");
@@ -114,18 +153,25 @@ public class ItemServiceImpl implements ItemService {
 
     @Override
     public CommentDto createComment(CommentDto comment, Long itemId, Long ownerId) {
-        Item item = itemDao.findById(itemId)
-                .orElseThrow(() -> new NotFoundException("Вещи с id " + itemId + " не найдена"));
-        User user = userDao.findById(ownerId)
-                .orElseThrow(() -> new NotFoundException("Пользователь с id " + ownerId + " не найден"));
-        Booking booking = bookingDao.findBookingByUserIdAndItemId(ownerId,itemId)
+        Item item = findItemById(itemId);
+        User user = findUserById(ownerId);
+        Booking booking = bookingDao.findBookingByUserIdAndItemId(ownerId, itemId)
                 .orElseThrow(() -> new NotFoundException("Бронь не найден"));
         if (booking.getStatus().equals(Status.APPROVED) && booking.getEnd().isBefore(LocalDateTime.now())) {
             log.info("Передаём запрос на создание отзыва в commentDao.");
-            return CommentMapper.toCommentDto(commentDao.save(CommentMapper.fromCommentDto(comment,item,user)));
+            return CommentMapper.toCommentDto(commentDao.save(CommentMapper.fromCommentDto(comment, item, user)));
         }
         throw new ValidationException("Вы не можете оставить отзыв о вещи с id " +
                 itemId + ", поскольку вы не брали её в аренду или срок аренды ещё не истёк.");
+    }
+
+    private Item findItemById(Long itemId) {
+        return itemDao.findById(itemId).orElseThrow(() -> new NotFoundException("Вещь с id " + itemId + " не найдена"));
+    }
+
+    private User findUserById(Long userId) {
+        return userDao.findById(userId)
+                .orElseThrow(() -> new NotFoundException("Пользователь c id " + userId + " не найден."));
     }
 }
 

@@ -17,7 +17,7 @@ public interface ItemService {
 
     ItemDto createItem(ItemDto item, Long ownerI);
 
-    void deleteItem(Long id);
+    void deleteItem(Long id, Long ownerId);
 
     ItemDto updateItem(Map<String, String> update, Long itemId, Long ownerId);
 

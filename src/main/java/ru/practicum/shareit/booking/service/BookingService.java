@@ -17,5 +17,5 @@ public interface BookingService {
 
     Collection<BookingDto> getOwnerBookings(String state, Long userId);
 
-    void deleteBooking(Long bookingId);
+    void deleteBooking(Long bookingId, Long userId);
 }

@@ -53,9 +53,10 @@ public class BookingController {
         return bookingService.getOwnerBookings(state, userId);
     }
 
-    @DeleteMapping
-    public void deleteBooking(Long bookingId) {
-        log.info("Запрос на удаление бронирования с id {}", bookingId);
-        bookingService.deleteBooking(bookingId);
+    @DeleteMapping("/{bookingId}")
+    public void deleteBooking(@PathVariable Long bookingId,
+                              @RequestHeader("X-Sharer-User-Id") Long userId) {
+        log.info("Запрос на удаление бронирования с id {}, от пользователя с id{}", bookingId, userId);
+        bookingService.deleteBooking(bookingId, userId);
     }
 }

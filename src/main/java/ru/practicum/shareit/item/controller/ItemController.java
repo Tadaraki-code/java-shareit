@@ -54,9 +54,9 @@ public class ItemController {
     }
 
     @DeleteMapping("/{id}")
-    public void deleteItem(@PathVariable("id") Long id) {
+    public void deleteItem(@PathVariable("id") Long id, @RequestHeader("X-Sharer-User-Id") Long ownerId) {
         log.info("Запрос на удалние вещи с id {}", id);
-        itemService.deleteItem(id);
+        itemService.deleteItem(id, ownerId);
     }
 
     @PostMapping("/{id}/comment")

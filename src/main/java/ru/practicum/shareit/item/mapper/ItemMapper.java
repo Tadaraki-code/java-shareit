@@ -11,7 +11,6 @@ import ru.practicum.shareit.item.model.Item;
 import ru.practicum.shareit.user.model.User;
 
 import java.util.Collection;
-import java.util.Optional;
 
 
 public class ItemMapper {
@@ -27,16 +26,11 @@ public class ItemMapper {
     }
 
     public static ItemDtoWhitBooking toItemDtoWhitBooking(Item item,
-                                                          Optional<Booking> lastBooking,
-                                                          Optional<Booking> nextBooking,
+                                                          Booking lastBooking,
+                                                          Booking nextBooking,
                                                           Collection<Comment> comments) {
-        BookingDto lastBookingDto = lastBooking
-                .map(BookingMapper::toBookingDto)
-                .orElse(null);
-
-        BookingDto nextBookingDto = nextBooking
-                .map(BookingMapper::toBookingDto)
-                .orElse(null);
+        BookingDto lastBookingDto = lastBooking != null ? BookingMapper.toBookingDto(lastBooking) : null;
+        BookingDto nextBookingDto = nextBooking != null ? BookingMapper.toBookingDto(nextBooking) : null;
 
         return new ItemDtoWhitBooking(
                 item.getId(),

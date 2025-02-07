@@ -49,6 +49,14 @@ public interface BookingDao extends JpaRepository<Booking, Long> {
     Collection<Booking> findAllOwnerItemsBookingById(@Param("itemIds") Collection<Long> itemIds);
 
     @Query("SELECT b FROM Booking b WHERE b.item.id IN :itemIds " +
+            "AND b.status = 'APPROVED' " +
+            "AND (b.start > :now OR b.end < :now) " +
+            "ORDER BY b.item.id, b.start ASC, b.end DESC")
+    Collection<Booking> findAllRelevantApprovedOwnerItemsBookingsById(@Param("itemIds") Collection<Long> itemIds,
+                                                                      @Param("now") LocalDateTime now);
+
+
+    @Query("SELECT b FROM Booking b WHERE b.item.id IN :itemIds " +
             "AND (b.start < :currentDate AND b.end > :currentDate) " +
             "AND b.status = 'APPROVED' " +
             "ORDER BY b.start DESC")
@@ -78,20 +86,6 @@ public interface BookingDao extends JpaRepository<Booking, Long> {
             "AND b.status = 'REJECTED' " +
             "ORDER BY b.start DESC")
     Collection<Booking> findRejectedOwnerItemsBookingById(@Param("itemIds") Collection<Long> itemIds);
-
-    @Query("SELECT b FROM Booking b WHERE b.item.id = :itemId " +
-            "AND b.status = 'APPROVED' " +
-            "AND b.end < :currentDate " +
-            "ORDER BY b.end DESC")
-    Optional<Booking> findLastBooking(@Param("itemId") Long itemId,
-                                      @Param("currentDate") LocalDateTime currentDate);
-
-    @Query("SELECT b FROM Booking b WHERE b.item.id = :itemId " +
-            "AND b.status = 'APPROVED' " +
-            "AND b.start > :currentDate " +
-            "ORDER BY b.start ASC")
-    Optional<Booking> findNextBooking(@Param("itemId") Long itemId,
-                                      @Param("currentDate") LocalDateTime currentDate);
 
     @Query("SELECT b FROM Booking b WHERE b.booker.id = :userId AND b.item.id = :itemId")
     Optional<Booking> findBookingByUserIdAndItemId(@Param("userId") Long userId,

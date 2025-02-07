@@ -11,4 +11,7 @@ public interface CommentDao extends JpaRepository<Comment, Long> {
 
     @Query("SELECT c FROM Comment c WHERE c.item.id = :itemId")
     Collection<Comment> findAllCommentsByItemId(@Param("itemId") Long itemId);
+
+    @Query("SELECT c FROM Comment c WHERE c.item.id IN :itemIds")
+    Collection<Comment> findAllCommentsForAllItemsById(@Param("itemIds") Collection<Long> itemIds);
 }
