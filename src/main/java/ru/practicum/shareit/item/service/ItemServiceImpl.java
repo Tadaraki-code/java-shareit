@@ -53,19 +53,15 @@ public class ItemServiceImpl implements ItemService {
             return Collections.emptyList();
         }
 
-        Collection<Booking> ItemsBooking = bookingDao.findAllRelevantApprovedOwnerItemsBookingsById(itemIds, now);
+        Collection<Booking> itemsBooking = bookingDao.findAllRelevantApprovedOwnerItemsBookingsById(itemIds, now);
 
-        Collection<Comment> ItemsComments = commentDao.findAllCommentsForAllItemsById(itemIds);
+        Collection<Comment> itemsComments = commentDao.findAllCommentsForAllItemsById(itemIds);
 
-        for (Comment c : ItemsComments) {
-            System.out.println(c);
-        }
-
-        Map<Long, List<Booking>> bookingMap = ItemsBooking.stream()
+        Map<Long, List<Booking>> bookingMap = itemsBooking.stream()
                 .filter(Objects::nonNull)
                 .collect(Collectors.groupingBy(b -> b.getItem().getId()));
 
-        Map<Long, List<Comment>> commentMap = ItemsComments.stream()
+        Map<Long, List<Comment>> commentMap = itemsComments.stream()
                 .filter(Objects::nonNull)
                 .collect(Collectors.groupingBy(c -> c.getItem().getId()));
 
