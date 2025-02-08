@@ -4,7 +4,10 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
+import ru.practicum.shareit.item.dto.CommentDto;
 import ru.practicum.shareit.item.dto.ItemDto;
+import ru.practicum.shareit.item.dto.ItemDtoWhitBooking;
+import ru.practicum.shareit.item.dto.ItemDtoWhitComments;
 import ru.practicum.shareit.item.service.ItemService;
 
 import java.util.Collection;
@@ -33,13 +36,13 @@ public class ItemController {
     }
 
     @GetMapping("/{id}")
-    public ItemDto getItem(@PathVariable("id") Long id) {
+    public ItemDtoWhitComments getItem(@PathVariable("id") Long id) {
         log.info("Запрос на получение вещи с id {}", id);
         return itemService.getItem(id);
     }
 
     @GetMapping
-    public Collection<ItemDto> getAllOwnerItems(@RequestHeader("X-Sharer-User-Id") Long ownerId) {
+    public Collection<ItemDtoWhitBooking> getAllOwnerItems(@RequestHeader("X-Sharer-User-Id") Long ownerId) {
         log.info("Запрос на получение  всех вещий пользоватля с id {}", ownerId);
         return itemService.getAllOwnerItems(ownerId);
     }
@@ -51,8 +54,16 @@ public class ItemController {
     }
 
     @DeleteMapping("/{id}")
-    public void deleteItem(@PathVariable("id") Long id) {
+    public void deleteItem(@PathVariable("id") Long id, @RequestHeader("X-Sharer-User-Id") Long ownerId) {
         log.info("Запрос на удалние вещи с id {}", id);
-        itemService.deleteItem(id);
+        itemService.deleteItem(id, ownerId);
+    }
+
+    @PostMapping("/{id}/comment")
+    public CommentDto createComment(@RequestBody CommentDto comment,
+                                    @PathVariable("id") Long itemId,
+                                    @RequestHeader("X-Sharer-User-Id") Long ownerId) {
+        log.info("Запрос на создание нового отзыва.");
+        return itemService.createComment(comment, itemId, ownerId);
     }
 }
