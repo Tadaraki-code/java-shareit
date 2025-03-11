@@ -30,10 +30,6 @@ public class BookingServiceImpl implements BookingService {
 
     @Override
     public BookingDto createBooking(RequestBookingDto bookingDto, Long userId) {
-        if (bookingDto.getStart().isAfter(bookingDto.getEnd())) {
-            throw new ValidationException("Дата начала бронирования не может быть позже конца бронирования");
-        }
-
         Item item = itemDao.findById(bookingDto.getItemId())
                 .orElseThrow(() -> new NotFoundException("Вещь c id " + bookingDto.getItemId() + " не найдена."));
         if (!item.isAvailable()) {

@@ -221,14 +221,6 @@ class ItemServiceTest {
     }
 
     @Test
-    void searchItemsShouldReturnEmptyListWhenTextBlank() {
-        List<ItemDto> result = itemService.searchItems("");
-
-        assertTrue(result.isEmpty());
-        verify(itemDao, never()).findByNameContainingOrDescriptionContaining(anyString());
-    }
-
-    @Test
     void searchItemsShouldReturnItemsWhenTextValid() {
         when(itemDao.findByNameContainingOrDescriptionContaining("item")).thenReturn(List.of(item));
 

@@ -78,18 +78,6 @@ class BookingServiceImplTest {
     }
 
     @Test
-    void createBookingShouldThrowValidationExceptionWhenStartAfterEnd() {
-        RequestBookingDto invalidDto = new RequestBookingDto(1L,
-                LocalDateTime.now().plusDays(2), LocalDateTime.now().plusDays(1));
-
-        ValidationException exception = assertThrows(ValidationException.class,
-                () -> bookingService.createBooking(invalidDto, 1L));
-        assertEquals("Дата начала бронирования не может быть позже конца бронирования",
-                exception.getMessage());
-        verify(bookingDao, never()).save(any());
-    }
-
-    @Test
     void createBookingShouldThrowNotFoundExceptionWhenItemNotFound() {
         when(itemDao.findById(1L)).thenReturn(Optional.empty());
 

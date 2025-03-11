@@ -142,9 +142,6 @@ public class ItemServiceImpl implements ItemService {
     @Override
     public List<ItemDto> searchItems(String searchText) {
         log.info("Передаём запрос на поиск вещи с текстом {} в itemDao.", searchText);
-        if (searchText == null || searchText.isBlank()) {
-            return List.of();
-        }
         return itemDao.findByNameContainingOrDescriptionContaining(searchText).stream()
                 .map(ItemMapper::toItemDto)
                 .toList();

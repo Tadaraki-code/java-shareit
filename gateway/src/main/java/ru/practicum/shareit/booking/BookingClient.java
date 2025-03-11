@@ -30,6 +30,9 @@ public class BookingClient extends BaseClient {
     }
 
     public ResponseEntity<Object> createBooking(long userId, BookItemRequestDto requestDto) {
+        if (requestDto.getStart().isAfter(requestDto.getEnd())) {
+            return ResponseEntity.badRequest().body("Дата начала бронирования не может быть позже конца бронирования");
+        }
         return post("", userId, requestDto);
     }
 
@@ -49,8 +52,6 @@ public class BookingClient extends BaseClient {
         Map<String, Object> parameters = Map.of(
                 "state", state.name()
         );
-        System.out.println(parameters);
-        System.out.println(state.name());
         return get("?state={state}", userId, parameters);
     }
 
@@ -58,8 +59,6 @@ public class BookingClient extends BaseClient {
         Map<String, Object> parameters = Map.of(
                 "state", state.name()
         );
-        System.out.println(state.name());
-        System.out.println(parameters);
         return get("/owner?state={state}", userId, parameters);
     }
 

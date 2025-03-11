@@ -1,33 +1,33 @@
 services:
-#  gateway:
-#    build: gateway
-#    image: shareit-gateway
-#    container_name: shareit-gateway
-#    ports:
-#      - "8080:8080"
-#    depends_on:
-#      - server
-#    environment:
-#      - SHAREIT_SERVER_URL=http://server:9090
-#    volumes:
-#      - /etc/localtime:/etc/localtime:ro
-#      - /etc/timezone:/etc/timezone:ro
-#
-#  server:
-#    build: server
-#    image: shareit-server
-#    container_name: shareit-server
-#    ports:
-#      - "9090:9090"
-#    depends_on:
-#      - db
-#    environment:
-#      - SPRING_DATASOURCE_URL=jdbc:postgresql://db:5432/shareit
-#      - SPRING_DATASOURCE_USERNAME=dbuser
-#      - SPRING_DATASOURCE_PASSWORD=12345
-#    volumes:
-#      - /etc/localtime:/etc/localtime:ro
-#      - /etc/timezone:/etc/timezone:ro
+  gateway:
+    build: gateway
+    image: shareit-gateway
+    container_name: shareit-gateway
+    ports:
+      - "8080:8080"
+    depends_on:
+      - server
+    environment:
+      - SHAREIT_SERVER_URL=http://server:9090
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - /etc/timezone:/etc/timezone:ro
+
+  server:
+    build: server
+    image: shareit-server
+    container_name: shareit-server
+    ports:
+      - "9090:9090"
+    depends_on:
+      - db
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://db:5432/shareit
+      - SPRING_DATASOURCE_USERNAME=dbuser
+      - SPRING_DATASOURCE_PASSWORD=12345
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - /etc/timezone:/etc/timezone:ro
 
   db:
     image: postgres:16.1
